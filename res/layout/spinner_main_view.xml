@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/spinner_title"
+        android:layout_width="500dp"
+        android:layout_height="18dp"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:textColor="#808080"
+        android:textSize="15dp" />
+
+    <TextView
+        android:id="@+id/spinner_value"
+        android:layout_width="100dp"
+        android:layout_height="18dp"
+        android:ellipsize="marquee"
+        android:maxLines="2"
+        android:text="Select Class"
+        android:textColor="#808080"
+        android:textSize="13dp" />
+
+</LinearLayout>

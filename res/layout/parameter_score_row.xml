@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="#d0d0d0"
+    android:padding="3dp"
+    android:weightSum="10">
+
+    <TextView
+        android:id="@+id/tvScoreName"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="6"
+        android:layout_marginLeft="7dp"
+        android:gravity="center_vertical"
+        android:textSize="17sp" />
+
+    <EditText
+        android:id="@+id/etScore"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="0"
+        android:imeOptions="actionDone"
+        android:inputType="numberDecimal"
+        android:singleLine="true"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:visibility="invisible"
+        android:windowSoftInputMode="stateVisible|adjustPan" >
+
+    </EditText>
+
+    <ImageView
+        android:id="@+id/ibDownArrow"
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:contentDescription="Decrease"
+        android:src="@drawable/expander_ic_minimized" />
+
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="0dp"
+        android:layout_height="fill_parent"
+        android:layout_weight="2"
+        android:clickable="true"
+        android:gravity="center"
+        android:textSize="15sp" />
+
+    <ImageView
+        android:id="@+id/ibUpArrow"
+        android:layout_width="0dip"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        android:contentDescription="Increase"
+        android:src="@drawable/expander_ic_maximized" />
+
+</LinearLayout>

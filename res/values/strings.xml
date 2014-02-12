@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Learning Outcomes</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_logout">Logout</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="register">Register</string>
+    <string name="login">Login</string>
+    <string name="home_screen_description">Logo for the app</string>
+    <string name="edit_text_username">Enter Username</string>
+    <string name="edit_text_password">Enter Password</string>
+    <string name="home_greeting">Hi!</string>
+    <string name="action_search">Search</string>
+    <string name="home_button_FA">Formative Task</string>
+    <string name="home_button_CA">Co-Scholastic Task</string>
+    <string name="home_button_SA">Summative Task</string>
+    <string name="fa_create_new">Create New Task</string>
+    <string name="action_add">Add</string>
+    <string name="enter_procedure">Enter Procedure (Optional)</string>
+    <string name="observations_checkbox">Observations</string>
+    <string name="group_task_checkbox">Group Task</string>
+    <string name="add_parameter_fa">Add/Remove Paramter</string>
+    <string name="total_marks">Total Marks</string>
+    <string name="button_save">Save</string>
+
+</resources>
