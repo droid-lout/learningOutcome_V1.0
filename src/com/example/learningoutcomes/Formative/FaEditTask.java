@@ -1,7 +1,9 @@
 package com.example.learningoutcomes.Formative;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -32,7 +34,7 @@ import android.widget.Toast;
 import com.example.learningoutcomes.R;
 import com.example.learningoutcomes.database.LODatabaseHelper;
 
-public class FaTask extends Activity implements OnItemSelectedListener,
+public class FaEditTask extends Activity implements OnItemSelectedListener,
 		OnClickListener {
 
 	SQLiteDatabase database;
@@ -63,6 +65,8 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 	TextView tvAddParameter;
 	EditText procedure;
 
+	String testId = null;
+
 	long id;
 	ListView paramListView;
 	CheckBox cbObservations, cbGroupTask;
@@ -71,10 +75,13 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 	Button save;
 	List<ScoreClass> prevScore = null;
 
+	List<prevParam> prevParm = null;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.fa_create);
+
 		checkVal = 0;
 		/** Initialise database variables */
 		databaseHelper = new LODatabaseHelper(this);
@@ -83,9 +90,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 		spTaskName = (Spinner) findViewById(R.id.spTaskName);
 		spTaskTopic = (Spinner) findViewById(R.id.spTaskTopic);
 		ivAddParameter = (ImageView) findViewById(R.id.suggestionAdd);
-		ivAddParameter.setEnabled(false);
 		save = (Button) findViewById(R.id.btCreateTask);
-		save.setEnabled(false);
 
 		ivAddParameter.setOnClickListener(this);
 		save.setOnClickListener(this);
@@ -94,7 +99,6 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 		tvAddParameter = (TextView) findViewById(R.id.tvAddParameter);
 		tvAddParameter.setOnClickListener(this);
-		tvAddParameter.setEnabled(false);
 		listView = (ListView) findViewById(R.id.lvParameters);
 
 		cbObservations = (CheckBox) findViewById(R.id.cbObservations);
@@ -102,12 +106,73 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 		procedure = (EditText) findViewById(R.id.etProcedure);
 
-		scoreName.setText("");
-		totalScore.setText("");
-		listView.setAdapter(null);
 		setTitle("");
 		/* start the actual create task here */
 		test = new testObj();
+
+		/*
+		 * Get the current task parameters from the database from the test id
+		 * that has been passed from the previous screen
+		 */
+		testId = getIntent().getExtras().getString("test_id");
+
+		Cursor cursor = database.rawQuery(
+				"Select * from test where test_id = '" + testId + "'", null);
+
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			/*
+			 * Store all the values of the required test in the object of test
+			 * class
+			 */
+			/*
+			 * These values need to be displayed onces the task edit screen
+			 * comes up
+			 */
+			test.taskName = cursor.getString(cursor
+					.getColumnIndexOrThrow("task_name"));
+			test.taskTopic = cursor.getString(cursor
+					.getColumnIndexOrThrow("task_topic"));
+			test.procedure = cursor.getString(cursor
+					.getColumnIndexOrThrow("procedure"));
+			test.comment = cursor.getInt(cursor
+					.getColumnIndexOrThrow("comment"));
+			test.totalMarks = cursor.getInt(cursor
+					.getColumnIndexOrThrow("total_marks"));
+			test.groupTask = cursor.getInt(cursor
+					.getColumnIndexOrThrow("group_task"));
+			cursor.moveToNext();
+		}
+		cursor.close();
+
+		cursor = database.rawQuery(
+				"Select ques_id, ques_max_score, parameter_1 from ques where test_id = '"
+						+ testId + "'", null);
+
+		prevParm = new ArrayList<FaEditTask.prevParam>();
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			/* These are all the parameters which are available */
+			/*
+			 * We need to store these parameters in a list and display these
+			 * straight away in the listview which displays the parameter score
+			 */
+			/* We need the parameter score, parameter name from this */
+			prevParam temp = new prevParam(cursor.getString(cursor
+					.getColumnIndexOrThrow("ques_id")), cursor.getString(cursor
+					.getColumnIndexOrThrow("parameter_1")),
+					cursor.getInt(cursor
+							.getColumnIndexOrThrow("ques_max_score")));
+
+			/*
+			 * This list contains the parameters which are already there in the
+			 * task and will always remain
+			 */
+			prevParm.add(temp);
+			cursor.moveToNext();
+		}
+		cursor.close();
+
 		/* TODO - get this value from previous screen */
 		test.testType = "Formative";
 		/* Get the value of the global settings for this user */
@@ -125,7 +190,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 		/* set up the spinner for this task name */
 		taskName = new ArrayList<String>();
-		Cursor cursor = database.rawQuery(
+		cursor = database.rawQuery(
 				"Select topic_name from topic where subject_id = '"
 						+ test.subjectId + "'", null);
 		cursor.moveToFirst();
@@ -143,15 +208,35 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 				// Optional
 				this, "Select Task", "Task"));
 		spTaskName.setOnItemSelectedListener(this);
+		spTaskName.setSelection(taskName.indexOf(test.taskName) + 1);
 
-		spTaskTopic.setAdapter(new NothingSelectedSpinnerAdapter(
-				adapterTaskName, -1,
-				// R.layout.contact_spinner_nothing_selected_dropdown, //
-				// Optional
-				this, "Select Task First", "Task"));
+		setupTaskTopicSpinner();
 		spTaskTopic.setOnItemSelectedListener(this);
-		spTaskTopic.setClickable(false);
+		spTaskTopic.setSelection(taskTopic.indexOf(test.taskTopic) + 1);
 
+		/* Set the value of the edittext for procedure */
+		if (!test.procedure.contentEquals("null"))
+			procedure.setText(test.procedure);
+
+		/* Check/Uncheck the check boxes */
+		if (1 == test.groupTask) {
+			cbGroupTask.setChecked(true);
+		}
+		if (1 == test.comment) {
+			cbObservations.setChecked(true);
+		}
+
+		/* Setup the initial parameters in the list view */
+		prevScore = new ArrayList<ScoreClass>();
+		for (int i = 0; i < prevParm.size(); i++) {
+			prevScore.add(get(prevParm.get(i).parameter_1,
+					prevParm.get(i).maxMarks, 0));
+			save.setEnabled(true);
+		}
+		adapter = new ScoreArrayAdapter(FaEditTask.this, prevScore, totalScore,
+				null, false);
+		totalScore.setText("" + test.totalMarks);
+		listView.setAdapter(adapter);
 		setAnimationValue();
 		// setupActionBar();
 	}
@@ -161,20 +246,6 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 	// actionBar.setDisplayShowCustomEnabled(true);
 	// actionBar.setCustomView(R.layout.action_bar_text);
 	// }
-
-	private List<ScoreClass> getScore() {
-		List<ScoreClass> list = new ArrayList<ScoreClass>();
-		list.add(get("Linux", 0, 0));
-		list.add(get("Windows7", 0, 0));
-		list.add(get("Suse", 0, 0));
-		list.add(get("Eclipse", 0, 0));
-		list.add(get("Ubuntu", 0, 0));
-		list.add(get("Solaris", 0, 0));
-		list.add(get("Android", 0, 0));
-		list.add(get("iPhone", 0, 0));
-
-		return list;
-	}
 
 	private ScoreClass get(String name, int score, int maxScore) {
 		return new ScoreClass(name, score, maxScore);
@@ -194,7 +265,20 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 		int totalMarks;
 		int weightageFactor;
 		String timeStamp;
+		int groupTask;
 	};
+
+	public class prevParam {
+		String quesId;
+		String parameter_1;
+		int maxMarks;
+
+		public prevParam(String quesId, String parameter_1, int maxMarks) {
+			this.quesId = quesId;
+			this.parameter_1 = parameter_1;
+			this.maxMarks = maxMarks;
+		}
+	}
 
 	@Override
 	protected void onPause() {
@@ -221,6 +305,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 			/*
 			 * In case user selects add new Give him option to add a new task
 			 */
+			adapterModel = null;
 			if (arg0.getItemIdAtPosition(arg2) + 1 != adapterTaskName
 					.getCount())
 				test.taskName = adapterTaskName.getItem((int) arg0
@@ -258,15 +343,12 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 										// R.layout.contact_spinner_nothing_selected_dropdown,
 										// //
 										// Optional
-										FaTask.this, "Select Task Name",
+										FaEditTask.this, "Select Task Name",
 										"Task Name"));
 						checkVal = 1;
 						ivAddParameter.setEnabled(false);
-						scoreName.setText("");
-						totalScore.setText("");
-						listView.setAdapter(null);
-						tvAddParameter.setEnabled(false);
 						save.setEnabled(false);
+						test.taskTopic = null;
 					}
 				});
 				// if button is clicked, close the custom dialog
@@ -298,24 +380,16 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 								+ "'," + test.subjectId + ", 'TimeStamp');";
 						database.execSQL(sql);
 						dialog.dismiss();
-						ivAddParameter.setEnabled(false);
 						save.setEnabled(false);
-						scoreName.setText("");
-						totalScore.setText("");
-						listView.setAdapter(null);
-						tvAddParameter.setEnabled(false);
 						setupTaskTopicSpinner();
+						test.taskTopic = null;
 					}
 				});
 				dialog.show();
 			} else {
-				ivAddParameter.setEnabled(false);
 				save.setEnabled(false);
-				scoreName.setText("");
-				totalScore.setText("");
-				listView.setAdapter(null);
-				tvAddParameter.setEnabled(false);
 				setupTaskTopicSpinner();
+				test.taskTopic = null;
 			}
 			break;
 		case R.id.spTaskTopic:
@@ -355,14 +429,9 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 										// R.layout.contact_spinner_nothing_selected_dropdown,
 										// //
 										// Optional
-										FaTask.this, "Select Topic Name",
+										FaEditTask.this, "Select Topic Name",
 										"Topic Name"));
-						ivAddParameter.setEnabled(false);
 						save.setEnabled(false);
-						scoreName.setText("");
-						totalScore.setText("");
-						listView.setAdapter(null);
-						tvAddParameter.setEnabled(false);
 						checkVal = 1;
 
 					}
@@ -399,36 +468,17 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 								+ "', 'TimeStamp');";
 						database.execSQL(sql);
 						dialog.dismiss();
-						ivAddParameter.setEnabled(true);
-						save.setEnabled(false);
-						scoreName.setText("Total Marks");
-						totalScore.setText("" + 0);
-						listView.setAdapter(null);
-						tvAddParameter.setEnabled(true);
+						if (prevScore.size() != 0)
+							save.setEnabled(true);
 						/* Set the adapter model to null */
-						adapterModel = null;
-						prevScore = null;
-						adapter = new ScoreArrayAdapter(FaTask.this, prevScore,
-								totalScore, null, false);
-
 					}
 				});
 
 				dialog.show();
 			} else {
-				/* Do something here! */
-				ivAddParameter.setEnabled(true);
-				save.setEnabled(false);
-				scoreName.setText("Total Marks");
-				totalScore.setText("" + 0);
-				listView.setAdapter(null);
-				tvAddParameter.setEnabled(true);
+				if (prevScore.size() != 0)
+					save.setEnabled(true);
 				/* Set the adapter model to null */
-				adapterModel = null;
-				prevScore = null;
-				adapter = new ScoreArrayAdapter(FaTask.this, prevScore,
-						totalScore, null, false);
-
 			}
 			break;
 		}
@@ -490,7 +540,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 				public void onClick(View arg0) {
 					// TODO Auto-generated method stub
 					/** Logic to add a new Parameter */
-					final Dialog innerDialog = new Dialog(FaTask.this,
+					final Dialog innerDialog = new Dialog(FaEditTask.this,
 							R.style.DialogSlideAnim);
 
 					innerDialog.setContentView(R.layout.dialog_view);
@@ -521,7 +571,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 							list.add(get(name));
 							list.get(list.size() - 1).setSelected(true);
 							adapterModel = new InteractiveArrayAdapter(
-									FaTask.this, list);
+									FaEditTask.this, list);
 							paramListView.setAdapter(adapterModel);
 							/* Insert data into table */
 							Cursor cursor = database
@@ -562,8 +612,10 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 					List<ScoreClass> nextScore = new ArrayList<ScoreClass>();
 					int totalMarks = 0;
 					for (int i = 0; i < list.size(); i++) {
-						if (list.get(i).isSelected()) {
+						if (list.get(i).isSelected() & (test.taskTopic != null))
+							/* Disable save button in case task topic is not set */
 							save.setEnabled(true);
+						if (list.get(i).isSelected()) {
 							if (prevScore == null) {
 								nextScore.add(get(list.get(i).getName(), 0, 0));
 							} else {
@@ -590,7 +642,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 						}
 					}
 					prevScore = nextScore;
-					adapter = new ScoreArrayAdapter(FaTask.this, nextScore,
+					adapter = new ScoreArrayAdapter(FaEditTask.this, nextScore,
 							totalScore, null, false);
 					totalScore.setText("" + totalMarks);
 					listView.setAdapter(adapter);
@@ -609,7 +661,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 			break;
 		case R.id.btCreateTask:
-			/* Save the task here */
+			/* This is where the task is finally updated */
 			List<ScoreClass> listScores = new ArrayList<ScoreClass>();
 			listScores = ((ScoreArrayAdapter) adapter).getData();
 
@@ -620,38 +672,8 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 					return;
 				}
 			}
-			/* Logic for adding new test and new tasks */
+			/* Update the task table with new values */
 
-			/* Get the maximum test id from test table */
-
-			Cursor cursor = database.rawQuery(
-					"Select ifnull(max(CAST(test_id as Int)), 0) from test",
-					null);
-			int testId = 0;
-			int taskNum = 0;
-			cursor.moveToFirst();
-
-			while (!cursor.isAfterLast()) {
-				testId = Integer.parseInt(cursor.getString(0));
-				testId += 1;
-				cursor.moveToNext();
-			}
-			cursor = database.rawQuery(
-					"Select ifnull(max(task_number),0) from test where class_id = "
-							+ test.classId + " and subject_id = "
-							+ test.subjectId + " and teacher_term = '"
-							+ test.teacher_term + "' and testname = '"
-							+ test.testName + "' and test_type =  'Formative"
-							+ "' and username = '" + username + "'", null);
-
-			cursor.moveToFirst();
-
-			while (!cursor.isAfterLast()) {
-				taskNum = Integer.parseInt(cursor.getString(0));
-				taskNum += 1;
-				cursor.moveToNext();
-			}
-			cursor.close();
 			String proc = null;
 			int totalMarks = Integer.parseInt(totalScore.getText().toString());
 			int comment = 0;
@@ -664,15 +686,113 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 			if (cbGroupTask.isChecked())
 				groupTask = 1;
 			/* Setting task num as zero for now as it has no significance here */
-			String sql = "INSERT INTO test VALUES ('" + String.valueOf(testId)
-					+ "', '" + test.subjectId + "'," + test.classId + ", '"
-					+ test.teacher_term + "', '" + test.testType + "', '"
-					+ test.testName + "', '" + taskNum + "', '" + test.taskName
-					+ "', '" + test.taskTopic + "', '" + proc + "', '"
-					+ comment + "', " + totalMarks + ", " + groupTask + ", "
-					+ 0 + ", '" + username + "', " + "'TimeStamp');";
+
+			String sql = "UPDATE test SET task_name = '" + test.taskName
+					+ "' , task_topic = '" + test.taskTopic + "', comment ="
+					+ comment + ", group_task = " + groupTask
+					+ ", total_marks = " + totalMarks + " ,procedure = '"
+					+ proc + "' where test_id = '" + testId + "'";
 
 			database.execSQL(sql);
+
+			/*
+			 * Task has been updated, now update the parameters in the parameter
+			 * table
+			 */
+
+			/* The two lists to be compared are prevParm and listScores */
+
+			/* Add questions/parameters into the ques table */
+
+			List<Integer> studentId = new ArrayList<Integer>();
+
+			Cursor cursor = database.rawQuery(
+					"Select student_id from student where class_id = "
+							+ test.classId, null);
+			cursor.moveToFirst();
+			while (!cursor.isAfterLast()) {
+
+				studentId.add(cursor.getInt(cursor
+						.getColumnIndexOrThrow("student_id")));
+				cursor.moveToNext();
+			}
+			cursor.close();
+
+			int i = 0,
+			j = 0,
+			tempLength = 0;
+			for (i = 0; i < prevParm.size(); i++) {
+				tempLength = 0;
+				for (j = 0; j < listScores.size(); j++) {
+					int maxMarks = listScores.get(j).getMaxScore();
+					int score = listScores.get(j).getScore();
+					String name = listScores.get(j).getName();
+					if (prevParm.get(i).parameter_1.contentEquals(name)) {
+						/*
+						 * Update the marks of this parameter and update marks
+						 * of all the students
+						 */
+						if (score == prevParm.get(i).maxMarks) {
+							/* No action is required in this case */
+							listScores.remove(j);
+						} else {
+							/*
+							 * Scaling is required and score needs to be updated
+							 * for this parameter in the database
+							 */
+							sql = "UPDATE ques SET ques_max_score = " + score
+									+ " where ques_id = '"
+									+ prevParm.get(i).quesId + "'";
+							database.execSQL(sql);
+
+							int scalefactor = score / prevParm.get(i).maxMarks;
+
+							/* remove this from the list scores */
+							cursor = database.rawQuery(
+									"Select student_id, response_id, response from response where ques_id = '"
+											+ prevParm.get(i).quesId + "'",
+									null);
+							cursor.moveToFirst();
+							while (!cursor.isAfterLast()) {
+								/*
+								 * Multiply marks of all the students with the
+								 * scaling factor
+								 */
+								sql = "UPDATE response set response = "
+										+ cursor.getInt(cursor
+												.getColumnIndexOrThrow("response"))
+										* scalefactor
+										+ " where response_id = '"
+										+ cursor.getString(cursor
+												.getColumnIndexOrThrow("response_id"))
+										+ "'";
+								database.execSQL(sql);
+								cursor.moveToNext();
+							}
+							cursor.close();
+							listScores.remove(j);
+						}
+						tempLength = 1;
+						break;
+					}
+				}
+				if (0 == tempLength) {
+					/*
+					 * this parameter needs to be deleted from the database and
+					 * from the student scores as well
+					 */
+					Log.e("Helllo", "Deleted " + prevParm.get(i).quesId);
+					tempLength = 0;
+					sql = "DELETE from ques where ques_id = '"
+							+ prevParm.get(i).quesId + "'";
+					database.execSQL(sql);
+					/* Delete marks for each student for this ques id */
+					sql = "DELETE from response where ques_id = '"
+							+ prevParm.get(i).quesId + "'";
+					database.execSQL(sql);
+					/* Marks for each student for this has been deleted */
+				}
+			}
 
 			cursor = database.rawQuery(
 					"Select ifnull(max(CAST(ques_id as Int)), 0) from ques",
@@ -686,13 +806,38 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 				cursor.moveToNext();
 			}
 			cursor.close();
+
+			Cursor cursorResponseId = database.rawQuery(
+					"Select max(CAST(response_id as Int), 0) from response",
+					null);
+
+			int responseId = 0;
+			cursorResponseId.moveToFirst();
+			while (!cursorResponseId.isAfterLast()) {
+
+				responseId = Integer.parseInt(cursorResponseId.getString(0));
+				responseId += 1;
+				cursorResponseId.moveToNext();
+			}
+			cursorResponseId.close();
+
+			/* TODO - Ques number has to be decided on how to stored */
 			int quesNum = 0;
+
+			/* This is used to store all the previous id's */
+			List<String> paramId = new ArrayList<String>();
+			for (int l = 0; l < prevParm.size(); l++) {
+				paramId.add(prevParm.get(l).quesId);
+			}
+			String[] stockArr = new String[paramId.size()];
+			stockArr = paramId.toArray(stockArr);
+
 			/* Add questions/parameters into the ques table */
-			for (int i = 0; i < listScores.size(); i++) {
+			for (i = 0; i < listScores.size(); i++) {
 				sql = "INSERT INTO ques VALUES ('"
 						+ String.valueOf(quesId)
 						+ "', '"
-						+ String.valueOf(testId)
+						+ testId
 						+ "',"
 						+ quesNum
 						+ ", "
@@ -708,30 +853,106 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 				/* Increement question ID by 1 */
 				quesId += 1;
 				quesNum += 1;
+
+				/*
+				 * In case marks of student have been added previously for this
+				 * test, add new entries for this ques and make all marks zero
+				 */
+				for (int k = 0; k < studentId.size(); k++) {
+					/*
+					 * First check if the score has been entered for this
+					 * student or not
+					 */
+					/*
+					 * prevParm contains the id of all the parameters which were
+					 * already there, if there is score for any one means that
+					 * score needs to be added as 0
+					 */
+
+					/*
+					 * Get the marks of the students if they have been saved
+					 * earlier
+					 */
+					cursor = database.rawQuery(
+							"Select response_id from response where student_id = '"
+									+ studentId.get(k) + "' and ques_id in ("
+									+ makePlaceholders(paramId.size()) + ")",
+							stockArr);
+
+					cursor.moveToFirst();
+					if (!cursor.isAfterLast()) {
+						/*
+						 * This means some data is there and marks of this
+						 * question need to be made 0 for this student
+						 */
+						sql = "INSERT INTO response VALUES ('"
+								+ String.valueOf(responseId) + "', '"
+								+ username + "', " + studentId.get(k) + ", '"
+								+ quesId + "', " + 0 + ", '" + "" + "', '"
+								+ "Present" + "', 'TimeStamp');";
+						database.execSQL(sql);
+						responseId += 1;
+
+					}
+					cursor.close();
+				}
 			}
+
 			Toast.makeText(this, "Task Saved!", Toast.LENGTH_SHORT).show();
-			Log.e("Webmail", "Harman");
-			Intent i = new Intent(this, FaTaskList.class);
+			Intent intent = new Intent(this, FaTaskList.class);
 			finish();
-			startActivity(i);
+			startActivity(intent);
 			break;
 		}
 	}
 
+	private String makePlaceholders(int size) {
+		if (size < 1) {
+			// It will lead to an invalid query anyway ..
+			throw new RuntimeException("No placeholders");
+		} else {
+			StringBuilder sb = new StringBuilder(size * 2 - 1);
+			sb.append("?");
+			for (int i = 1; i < size; i++) {
+				sb.append(",?");
+			}
+			return sb.toString();
+		}
+	}
+
 	public List<Model> getModel() {
-		List<Model> list = new ArrayList<Model>();
+		Set<Model> set = new LinkedHashSet<Model>();
 		Cursor cursor = database.rawQuery(
 				"select parameter_name from parameter where task_name ='"
 						+ test.taskName + "'", null);
 
+		int check = 0;
+		for (int i = 0; i < prevParm.size(); i++) {
+			set.add(get(prevParm.get(i).parameter_1));
+		}
+
+		List<ScoreClass> score = new ArrayList<ScoreClass>();
+		score = ((ScoreArrayAdapter) adapter).getData();
+		for (int i = 0; i < score.size(); i++) {
+			if (set.add(get(score.get(i).getName())))
+				check++;
+		}
+
 		cursor.moveToFirst();
 		while (!cursor.isAfterLast()) {
-			list.add(get(cursor.getString(cursor
+			set.add(get(cursor.getString(cursor
 					.getColumnIndexOrThrow("parameter_name"))));
 			cursor.moveToNext();
 		}
-		// make sure to close the cursor
 		cursor.close();
+
+		List<Model> list = new ArrayList<Model>(set);
+		for (int i = 0; i < prevParm.size(); i++) {
+			list.get(i).setSelected(true);
+		}
+		for (int j = prevParm.size(); j < prevParm.size() + check; j++) {
+			list.get(j).setSelected(true);
+		}
 		return list;
 	}
 

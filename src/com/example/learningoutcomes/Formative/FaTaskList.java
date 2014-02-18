@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -200,7 +199,7 @@ public class FaTaskList extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			Intent intent = new Intent(getApplicationContext(), FaTask.class);
+			Intent intent = new Intent(getApplicationContext(), FaEditTask.class);
 			intent.putExtra("test_id", "" + testId.get(selectPosition));
 			startActivity(intent);
 		}

@@ -1,7 +1,7 @@
 package com.example.learningoutcomes;
 
-import com.example.learningoutcomes.Formative.*;
-import com.example.learningoutcomes.database.LODatabaseHelper;
+import java.util.HashSet;
+import java.util.Set;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -12,12 +12,18 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.example.learningoutcomes.Formative.FaTask;
+import com.example.learningoutcomes.Formative.FaTaskList;
+import com.example.learningoutcomes.Formative.Model;
+import com.example.learningoutcomes.database.LODatabaseHelper;
 
 @SuppressLint("NewApi")
 public class Home extends Activity implements OnClickListener {
@@ -34,6 +40,7 @@ public class Home extends Activity implements OnClickListener {
 		setContentView(R.layout.home);
 		databaseHelper = new LODatabaseHelper(this);
 		database = databaseHelper.getWritableDatabase();
+
 		// Function call to set the title of the Action Bar
 		setTitle(setName());
 		btFaTask = (Button) findViewById(R.id.btFaTask);
@@ -72,7 +79,8 @@ public class Home extends Activity implements OnClickListener {
 			Toast.makeText(this, "This is SPARTA !", Toast.LENGTH_SHORT).show();
 			break;
 		case R.id.btSaTask:
-			Toast.makeText(this, "Under Construnction !", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Under Construnction !", Toast.LENGTH_SHORT)
+					.show();
 			break;
 		}
 	}
