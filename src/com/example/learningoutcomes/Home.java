@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.learningoutcomes.Formative.FaTask;
@@ -27,7 +28,7 @@ import com.example.learningoutcomes.database.LODatabaseHelper;
 
 @SuppressLint("NewApi")
 public class Home extends Activity implements OnClickListener {
-
+	Settings m_settings;
 	SQLiteDatabase database;
 	LODatabaseHelper databaseHelper;
 
@@ -38,9 +39,12 @@ public class Home extends Activity implements OnClickListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
+		m_settings = new Settings(getApplicationContext(), 
+				(Spinner) findViewById(R.id.spClass), (Spinner) findViewById(R.id.spTestName),
+				(Spinner) findViewById(R.id.spTerm), (Spinner) findViewById(R.id.spSubject));
 		databaseHelper = new LODatabaseHelper(this);
 		database = databaseHelper.getWritableDatabase();
-
+		
 		// Function call to set the title of the Action Bar
 		setTitle(setName());
 		btFaTask = (Button) findViewById(R.id.btFaTask);
@@ -115,8 +119,8 @@ public class Home extends Activity implements OnClickListener {
 
 			return super.onOptionsItemSelected(menu);
 		case R.id.action_settings:
-			i = new Intent(this, Settings.class);
-			startActivity(i);
+/*			i = new Intent(this, Settings.class);
+			startActivity(i);*/
 			return super.onOptionsItemSelected(menu);
 		default:
 			return super.onOptionsItemSelected(menu);

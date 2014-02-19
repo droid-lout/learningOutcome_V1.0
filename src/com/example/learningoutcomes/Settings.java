@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -22,13 +19,14 @@ import com.example.learningoutcomes.Formative.NothingSelectedSpinnerAdapter;
 import com.example.learningoutcomes.database.LODatabaseHelper;
 import com.example.learningoutcomes.database.LODatabaseUtility;
 
-public class Settings extends Activity implements OnItemSelectedListener {
+public class Settings implements OnItemSelectedListener {
 
 	/*
 	 * The global settings are stored in usernameclass, usernameterm,
 	 * usernametestname, usernamesubject in shared preferences
 	 */
 	/* this activity is yet to be tested */
+	Context m_context; 
 	Spinner m_spinnerClass;
 	Spinner m_spinnerSubject;
 	Spinner m_spinnerTerm;
@@ -53,27 +51,28 @@ public class Settings extends Activity implements OnItemSelectedListener {
 	Editor et;
 
 	private int gallery;
+	
+	public Settings(Context context, Spinner spinnerClass, 
+			Spinner spinnnerTestName, Spinner spinnerTerm, Spinner spinnerSubject) {
+		m_context = context;
+		m_spinnerClass = spinnerClass;
+		m_spinnerTestName = spinnnerTestName;
+		m_spinnerTerm = spinnerTerm;
+		m_spinnerSubject = spinnerSubject;
+		init();
 
-	private int boolVal = 0;
+	}
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.settings);
-		Log.e("Nitish", "" + this);
-		m_spinnerClass = (Spinner) findViewById(R.id.spClass);
-		m_spinnerTestName = (Spinner) findViewById(R.id.spTestName);
-		m_spinnerTerm = (Spinner) findViewById(R.id.spTerm);
-		m_spinnerSubject = (Spinner) findViewById(R.id.spSubject);
+	private void init() {
 
 		m_listClass = new HashMap<String, String>();
 		m_listSubject = new HashMap<String, String>();
 		m_listTerm = new ArrayList<String>();
 		m_listTestName = new ArrayList<String>();
 
-		prefs = this.getSharedPreferences("global_settings",
+		prefs = m_context.getSharedPreferences("global_settings",
 				Context.MODE_PRIVATE);
-		databaseHelper = new LODatabaseHelper(this);
+		databaseHelper = new LODatabaseHelper(m_context);
 		database = databaseHelper.getWritableDatabase();
 		LODatabaseUtility.getInstance().setDatabse(database);
 
@@ -208,13 +207,13 @@ public class Settings extends Activity implements OnItemSelectedListener {
 
 			ArrayList<String> subjectVal = new ArrayList<String>(
 					m_listSubject.keySet());
-			adapterSubject = new ArrayAdapter<String>(this, -1, subjectVal);
+			adapterSubject = new ArrayAdapter<String>(m_context, -1, subjectVal);
 			m_spinnerSubject.setAdapter(new NothingSelectedSpinnerAdapter(
 					adapterSubject, -1,
 					// R.layout.contact_spinner_nothing_selected_dropdown,
 					// //
 					// Optional
-					this, "Select Subject", "Subject"));
+					m_context, "Select Subject", "Subject"));
 			String temp = m_listSubject.get(subjectVal.get(0));
 			et.putString(username + "subject", temp);
 			m_spinnerSubject.setSelection(1);
@@ -253,13 +252,13 @@ public class Settings extends Activity implements OnItemSelectedListener {
 			cursor.close();
 			ArrayList<String> classVal = new ArrayList<String>(
 					m_listClass.keySet());
-			adapterClass = new ArrayAdapter<String>(this, -1, classVal);
+			adapterClass = new ArrayAdapter<String>(m_context, -1, classVal);
 			m_spinnerClass.setAdapter(new NothingSelectedSpinnerAdapter(
 					adapterClass, -1,
 					// R.layout.contact_spinner_nothing_selected_dropdown,
 					// //
 					// Optional
-					this, "Select Class", "Class"));
+					m_context, "Select Class", "Class"));
 			temp = m_listClass.get(classVal.get(0));
 			et.putString(username + "class", temp);
 			m_spinnerClass.setSelection(1);
@@ -311,13 +310,13 @@ public class Settings extends Activity implements OnItemSelectedListener {
 			cursor.close();
 
 			classVal = new ArrayList<String>(m_listClass.keySet());
-			adapterClass = new ArrayAdapter<String>(this, -1, classVal);
+			adapterClass = new ArrayAdapter<String>(m_context, -1, classVal);
 			m_spinnerClass.setAdapter(new NothingSelectedSpinnerAdapter(
 					adapterClass, -1,
 					// R.layout.contact_spinner_nothing_selected_dropdown,
 					// //
 					// Optional
-					this, "Select Class", "Class"));
+					m_context, "Select Class", "Class"));
 
 			temp = m_listClass.get(classVal.get(0));
 			et.putString(username + "class", temp);
@@ -346,33 +345,21 @@ public class Settings extends Activity implements OnItemSelectedListener {
 
 	private ArrayAdapter<String> setSpinnerAdapter(Spinner spinner, ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList, String selection,
 			String adapterMessage, String adapterScrollTitle){
-		arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), -1, arrayList);
+		arrayAdapter = new ArrayAdapter<String>(m_context, -1, arrayList);
 		spinner.setAdapter(new NothingSelectedSpinnerAdapter(arrayAdapter, -1,
 				// R.layout.contact_spinner_nothing_selected_dropdown, //
 				// Optional
-				getApplicationContext(), adapterMessage, adapterScrollTitle));
+				m_context, adapterMessage, adapterScrollTitle));
 
 		/* Get the subjects according to the term in the global settings */
 		spinner.setSelection(arrayList.indexOf(selection) + 1);
 		spinner.setOnItemSelectedListener(this);
 		return arrayAdapter;
 	}
+
 	@Override
 	public void onNothingSelected(AdapterView<?> arg0) {
 		// TODO Auto-generated method stub
-
+		
 	}
-
-	@Override
-	protected void onPause() {
-		databaseHelper.close();
-		super.onPause();
-	}
-
-	@Override
-	protected void onResume() {
-		database = databaseHelper.getWritableDatabase();
-		super.onResume();
-	}
-
 }
