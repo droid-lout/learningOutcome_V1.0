@@ -7,6 +7,6 @@ gen/
 project.properties
 *.swp
 # Package Files #
-*.jar
+
 *.war
 *.ear
