@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -26,7 +27,7 @@ public class Settings implements OnItemSelectedListener {
 	 * usernametestname, usernamesubject in shared preferences
 	 */
 	/* this activity is yet to be tested */
-	Context m_context; 
+	Context m_context;
 	Spinner m_spinnerClass;
 	Spinner m_spinnerSubject;
 	Spinner m_spinnerTerm;
@@ -51,9 +52,10 @@ public class Settings implements OnItemSelectedListener {
 	Editor et;
 
 	private int gallery;
-	
-	public Settings(Context context, Spinner spinnerClass, 
-			Spinner spinnnerTestName, Spinner spinnerTerm, Spinner spinnerSubject) {
+
+	public Settings(Context context, Spinner spinnerClass,
+			Spinner spinnnerTestName, Spinner spinnerTerm,
+			Spinner spinnerSubject) {
 		m_context = context;
 		m_spinnerClass = spinnerClass;
 		m_spinnerTestName = spinnnerTestName;
@@ -83,42 +85,57 @@ public class Settings implements OnItemSelectedListener {
 	private void setUpSpinners() {
 		/* Get username from the Global settings */
 		username = prefs.getString("username", "user");
-
+		Log.e("Username", username);
 		/*
-		 * Get the value of Term from the teacher table and store in the list for term
+		 * Get the value of Term from the teacher table and store in the list
+		 * for term
 		 */
-		String query = "Select distinct teacher_term from teacher where username = '" + username + "'"; 
+		String query = "Select distinct teacher_term from teacher where username = '"
+				+ username + "'";
 		Cursor cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
-		m_listTerm = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "teacher_term");
+		m_listTerm = LODatabaseUtility.getInstance().dataListfromCursor(cursor,
+				"teacher_term");
 		termSettings = prefs.getString(username + "term", "0");
-		adapterTerm = setSpinnerAdapter(m_spinnerTerm, adapterTerm, m_listTerm, termSettings, "Select Term", "Term");
-		
-		/* 
-		 * Get the value of subject teacher teaches for a particular term 
-		*/
+		adapterTerm = setSpinnerAdapter(m_spinnerTerm, adapterTerm, m_listTerm,
+				termSettings, "Select Term", "Term");
+		m_spinnerTerm.setSelection(m_listTerm.indexOf(termSettings) + 1);
+		/*
+		 * Get the value of subject teacher teaches for a particular term
+		 */
 		query = "Select subject_id from teacher where username = '" + username
 				+ "' and teacher_term = '" + termSettings + "'";
 		cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
 		ArrayList<String> subjectId = new ArrayList<String>();
 		ArrayList<String> subjectName = new ArrayList<String>();
 
-		subjectId = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "subject_id");
+		subjectId = LODatabaseUtility.getInstance().dataListfromCursor(cursor,
+				"subject_id");
 		for (int i = 0; i < subjectId.size(); ++i) {
-			query = "Select subject_name from subject where subject_id = '" + subjectId.get(i) + "'";
+			query = "Select subject_name from subject where subject_id = '"
+					+ subjectId.get(i) + "'";
 			cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
-			subjectName = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "subject_name");
+			subjectName = LODatabaseUtility.getInstance().dataListfromCursor(
+					cursor, "subject_name");
 			for (int j = 0; j < subjectName.size(); ++j) {
 				m_listSubject.put(subjectName.get(j), subjectId.get(i));
 			}
 		}
 
 		subjectSettings = prefs.getString(username + "subject", "0");
-		ArrayList<String> subjectVal = new ArrayList<String>(m_listSubject.keySet());
-		adapterSubject = setSpinnerAdapter(m_spinnerSubject, adapterSubject, subjectVal, termSettings, "Select Subject", "Subject");
-		
-		/* 
-		 * Get the value of class and section a teacher teaches for a particular term and a particular subject 
-		*/
+
+		ArrayList<String> subjectVal = new ArrayList<String>(
+				m_listSubject.keySet());
+		adapterSubject = setSpinnerAdapter(m_spinnerSubject, adapterSubject,
+				subjectVal, termSettings, "Select Subject", "Subject");
+
+		ArrayList<String> temp = new ArrayList<String>(m_listSubject.values());
+		m_spinnerSubject.setOnItemSelectedListener(this);
+		m_spinnerSubject.setSelection(temp.indexOf(subjectSettings) + 1);
+
+		/*
+		 * Get the value of class and section a teacher teaches for a particular
+		 * term and a particular subject
+		 */
 		query = "Select class_id from teacher where username = '" + username
 				+ "' and teacher_term = '" + termSettings
 				+ "' and subject_id = '" + subjectSettings + "'";
@@ -127,36 +144,55 @@ public class Settings implements OnItemSelectedListener {
 		ArrayList<String> className = new ArrayList<String>();
 		ArrayList<String> sectionName = new ArrayList<String>();
 
-		classId = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "class_id");
+		classId = LODatabaseUtility.getInstance().dataListfromCursor(cursor,
+				"class_id");
 		for (int i = 0; i < classId.size(); ++i) {
-			//Get the class name(s) associated with the class IDs
-			query = "Select class_name from class where class_id = '" + classId.get(i) + "'";
+			// Get the class name(s) associated with the class IDs
+			query = "Select class_name from class where class_id = '"
+					+ classId.get(i) + "'";
 			cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
-			className = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "class_name");
-			//Get the section name(s) associated with the class IDs
-			query = "Select section_name from class where class_id = '" + classId.get(i) + "'";
+			className = LODatabaseUtility.getInstance().dataListfromCursor(
+					cursor, "class_name");
+			// Get the section name(s) associated with the class IDs
+			query = "Select section_name from class where class_id = '"
+					+ classId.get(i) + "'";
 			cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
-			sectionName = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "section_name");
-			for (int j = 0; j < className.size(); ++j) { 
-				// we can also use section name .size as well cause both size are the same.
+			sectionName = LODatabaseUtility.getInstance().dataListfromCursor(
+					cursor, "section_name");
+			for (int j = 0; j < className.size(); ++j) {
+				// we can also use section name .size as well cause both size
+				// are the same.
 				// For every corresponding class there is a section
-				m_listClass.put(className.get(j) + "-" + sectionName.get(j), classId.get(i));
+				m_listClass.put(className.get(j) + "-" + sectionName.get(j),
+						classId.get(i));
 			}
 		}
 
 		classSettings = prefs.getString(username + "class", "0");
+
 		ArrayList<String> classVal = new ArrayList<String>(m_listClass.keySet());
-		adapterClass = setSpinnerAdapter(m_spinnerClass, adapterClass, classVal, classSettings, "Select Class", "Class");
+		adapterClass = setSpinnerAdapter(m_spinnerClass, adapterClass,
+				classVal, classSettings, "Select Class", "Class");
+
+		temp = new ArrayList<String>(m_listClass.values());
+		m_spinnerClass.setOnItemSelectedListener(this);
+		m_spinnerClass.setSelection(temp.indexOf(classSettings) + 1);
 
 		/* Get the test name based on the school ID */
 		int school_id = Integer.parseInt(prefs.getString(
 				username + "school_id", "0"));
-		query = "Select testname from testname where school_id = '" + school_id	+ "'";
+		query = "Select testname from testname where school_id = '" + school_id
+				+ "'";
 		cursor = LODatabaseUtility.getInstance().cursorFromQuery(query);
-		m_listTestName = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "testname");
+		m_listTestName = LODatabaseUtility.getInstance().dataListfromCursor(
+				cursor, "testname");
 
 		testNameSettings = prefs.getString(username + "testname", "0");
-		adapterTestName = setSpinnerAdapter(m_spinnerTestName, adapterTestName, m_listTestName, testNameSettings, "Select Test", "Test");
+		adapterTestName = setSpinnerAdapter(m_spinnerTestName, adapterTestName,
+				m_listTestName, testNameSettings, "Select Test", "Test");
+		m_spinnerTestName
+				.setSelection(m_listTestName.indexOf(testNameSettings) + 1);
+
 	}
 
 	@Override
@@ -224,7 +260,7 @@ public class Settings implements OnItemSelectedListener {
 							+ "' and teacher_term = '"
 							+ adapterTerm.getItem((int) arg0
 									.getItemIdAtPosition(arg2))
-									+ "' and subject_id = '" + temp + "'", null);
+							+ "' and subject_id = '" + temp + "'", null);
 			cursor.moveToFirst();
 			m_listClass = new HashMap<String, String>();
 			while (!cursor.isAfterLast()) {
@@ -236,12 +272,12 @@ public class Settings implements OnItemSelectedListener {
 				cursorClass.moveToFirst();
 				if (!cursorClass.isAfterLast()) {
 					m_listClass
-					.put(cursorClass.getString(cursorClass
-							.getColumnIndexOrThrow("class_name"))
-							+ "-"
-							+ cursorClass
-							.getString(cursorClass
-									.getColumnIndexOrThrow("section_name")),
+							.put(cursorClass.getString(cursorClass
+									.getColumnIndexOrThrow("class_name"))
+									+ "-"
+									+ cursorClass
+											.getString(cursorClass
+													.getColumnIndexOrThrow("section_name")),
 									cursor.getString(cursor
 											.getColumnIndexOrThrow("class_id")));
 					cursorClass.close();
@@ -280,8 +316,10 @@ public class Settings implements OnItemSelectedListener {
 							+ "' and teacher_term = '"
 							+ termSettings
 							+ "' and subject_id = '"
-							+ m_listSubject.get(adapterSubject.getItem((int) arg0
-									.getItemIdAtPosition(arg2))) + "'", null);
+							+ m_listSubject.get(adapterSubject
+									.getItem((int) arg0
+											.getItemIdAtPosition(arg2))) + "'",
+					null);
 			cursor.moveToFirst();
 			m_listClass = new HashMap<String, String>();
 
@@ -294,12 +332,12 @@ public class Settings implements OnItemSelectedListener {
 				cursorClass.moveToFirst();
 				if (!cursorClass.isAfterLast()) {
 					m_listClass
-					.put(cursorClass.getString(cursorClass
-							.getColumnIndexOrThrow("class_name"))
-							+ "-"
-							+ cursorClass
-							.getString(cursorClass
-									.getColumnIndexOrThrow("section_name")),
+							.put(cursorClass.getString(cursorClass
+									.getColumnIndexOrThrow("class_name"))
+									+ "-"
+									+ cursorClass
+											.getString(cursorClass
+													.getColumnIndexOrThrow("section_name")),
 									cursor.getString(cursor
 											.getColumnIndexOrThrow("class_id")));
 					cursorClass.close();
@@ -343,12 +381,13 @@ public class Settings implements OnItemSelectedListener {
 		}
 	}
 
-	private ArrayAdapter<String> setSpinnerAdapter(Spinner spinner, ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList, String selection,
-			String adapterMessage, String adapterScrollTitle){
+	private ArrayAdapter<String> setSpinnerAdapter(Spinner spinner,
+			ArrayAdapter<String> arrayAdapter, ArrayList<String> arrayList,
+			String selection, String adapterMessage, String adapterScrollTitle) {
 		arrayAdapter = new ArrayAdapter<String>(m_context, -1, arrayList);
 		spinner.setAdapter(new NothingSelectedSpinnerAdapter(arrayAdapter, -1,
-				// R.layout.contact_spinner_nothing_selected_dropdown, //
-				// Optional
+		// R.layout.contact_spinner_nothing_selected_dropdown, //
+		// Optional
 				m_context, adapterMessage, adapterScrollTitle));
 
 		/* Get the subjects according to the term in the global settings */
@@ -360,6 +399,6 @@ public class Settings implements OnItemSelectedListener {
 	@Override
 	public void onNothingSelected(AdapterView<?> arg0) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
