@@ -258,7 +258,7 @@ public class LOTableClass {
 	public static final String CREATE_TABLE_GROUP = "create table "
 			+ TABLE_GROUP + "(" + GROUP_ID + " text primary key, " + STUDENT_ID
 			+ " integer not null, " + GROUP_NAME + " text not null, " + TEST_ID
-			+ " integer not null, " + TIMESTAMP + " text not null" + ");";
+			+ " text not null, " + TIMESTAMP + " text not null" + ");";
 
 	/** < Topic Table */
 	public static final String CREATE_TABLE_TOPIC = "create table "
