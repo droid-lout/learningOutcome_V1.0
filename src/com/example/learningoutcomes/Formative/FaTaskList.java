@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,22 +19,24 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.learningoutcomes.R;
+import com.example.learningoutcomes.Settings;
 import com.example.learningoutcomes.database.LODatabaseHelper;
+import com.example.learningoutcomes.database.LODatabaseUtility;
 import com.example.learningoutcomes.swipeListView.SwipeDismissListViewTouchListener;
 
 @SuppressLint("NewApi")
 public class FaTaskList extends Activity {
-
+	
+	private Settings m_settings;
+	private LODatabaseHelper m_databaseHelper;
+	private SQLiteDatabase m_database;
+	private DrawerLayout m_faTaskListDrawerLayout;
 	private ListView lvTaskList;
 	ArrayAdapter<TaskListRow> adapter;
-
-	SQLiteDatabase database;
-	LODatabaseHelper databaseHelper;
-
-
 	String username, teacher_term, testName;
 	int classId, subjectId, selectPosition;
 
@@ -46,8 +50,14 @@ public class FaTaskList extends Activity {
 		setContentView(R.layout.fa_task_list);
 		// Function call to set the title of the Action Bar
 		/** Initialise database variables */
-		databaseHelper = new LODatabaseHelper(this);
-		database = databaseHelper.getWritableDatabase();
+		m_databaseHelper = new LODatabaseHelper(this);
+		m_database = m_databaseHelper.getWritableDatabase();
+		LODatabaseUtility.getInstance().setDatabase(m_database);
+		m_settings = new Settings(getApplicationContext(), 
+				(Spinner) findViewById(R.id.spClass), (Spinner) findViewById(R.id.spTestName),
+				(Spinner) findViewById(R.id.spTerm), (Spinner) findViewById(R.id.spSubject));
+		m_settings.init();
+
 		setTitle(setName());
 		getActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -60,7 +70,9 @@ public class FaTaskList extends Activity {
 				.parseInt(shPref.getString(username + "subject", ""));
 		teacher_term = shPref.getString(username + "term", "");
 		testName = shPref.getString(username + "testname", "");
-
+		//drawer layout
+		m_faTaskListDrawerLayout = (DrawerLayout) findViewById(R.id.faTaskListDrawerLayout);
+		//Setting Swipe in action
 		lvTaskList = (ListView) findViewById(R.id.lvTaskList);
 		testId = new ArrayList<String>();
 		adapter = new TaskListRowDataAdapter(this, getTaskList(),
@@ -122,7 +134,7 @@ public class FaTaskList extends Activity {
 	private List<TaskListRow> getTaskList() {
 		List<TaskListRow> list = new ArrayList<TaskListRow>();
 
-		Cursor cursor = database.rawQuery(
+		Cursor cursor = m_database.rawQuery(
 				"select * from test where class_id = " + classId
 				+ " and subject_id = " + subjectId
 				+ " and teacher_term = '" + teacher_term
@@ -172,21 +184,28 @@ public class FaTaskList extends Activity {
 		switch (menu.getItemId()) {
 		case android.R.id.home:
 			finish();
-			return super.onOptionsItemSelected(menu);
+			break;
 		case R.id.action_add:
 			createTask();
 			Intent intent = new Intent(getApplicationContext(), FaTask.class);
 			finish();
 			startActivity(intent);
-			return super.onOptionsItemSelected(menu);
+			break;
 		case R.id.action_logout:
 			Toast toast = Toast.makeText(getApplicationContext(),
 					"Under Construction", Toast.LENGTH_SHORT);
 			toast.show();
-			return super.onOptionsItemSelected(menu);
+			break;
+		case R.id.action_settings:
+			if(!m_faTaskListDrawerLayout.isDrawerOpen(Gravity.END))
+				m_faTaskListDrawerLayout.openDrawer(Gravity.END);
+			else
+				m_faTaskListDrawerLayout.closeDrawer(Gravity.END);
+			break;
 		default:
 			return super.onOptionsItemSelected(menu);
 		}
+		return super.onOptionsItemSelected(menu);
 	}
 
 	private void createTask() {
