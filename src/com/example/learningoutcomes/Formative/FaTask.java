@@ -30,13 +30,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.learningoutcomes.R;
+import com.example.learningoutcomes.Settings;
 import com.example.learningoutcomes.database.LODatabaseHelper;
+import com.example.learningoutcomes.database.LODatabaseUtility;
 
 public class FaTask extends Activity implements OnItemSelectedListener,
 		OnClickListener {
-
-	SQLiteDatabase database;
-	LODatabaseHelper databaseHelper;
+	private Settings m_settings; 
+	private SQLiteDatabase m_database;
+	private LODatabaseHelper m_databaseHelper;
 
 	ListView listView;
 	public ArrayAdapter<ScoreClass> adapter;
@@ -77,9 +79,13 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 		setContentView(R.layout.fa_create);
 		checkVal = 0;
 		/** Initialise database variables */
-		databaseHelper = new LODatabaseHelper(this);
-		database = databaseHelper.getWritableDatabase();
-
+		m_databaseHelper = new LODatabaseHelper(this);
+		m_database = m_databaseHelper.getWritableDatabase();
+//		LODatabaseUtility.getInstance().setDatabase(m_database);
+		m_settings = new Settings(getApplicationContext(), 
+				(Spinner) findViewById(R.id.spClass), (Spinner) findViewById(R.id.spTestName),
+				(Spinner) findViewById(R.id.spTerm), (Spinner) findViewById(R.id.spSubject));
+		m_settings.init();
 		spTaskName = (Spinner) findViewById(R.id.spTaskName);
 		spTaskTopic = (Spinner) findViewById(R.id.spTaskTopic);
 		ivAddParameter = (ImageView) findViewById(R.id.suggestionAdd);
@@ -125,7 +131,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 		/* set up the spinner for this task name */
 		taskName = new ArrayList<String>();
-		Cursor cursor = database.rawQuery(
+		Cursor cursor = m_database.rawQuery(
 				"Select topic_name from topic where subject_id = '"
 						+ test.subjectId + "'", null);
 		cursor.moveToFirst();
@@ -198,13 +204,13 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 	@Override
 	protected void onPause() {
-		databaseHelper.close();
+		m_databaseHelper.close();
 		super.onPause();
 	}
 
 	@Override
 	protected void onResume() {
-		database = databaseHelper.getWritableDatabase();
+		m_database = m_databaseHelper.getWritableDatabase();
 		super.onResume();
 	}
 
@@ -280,7 +286,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 						spTaskName.setSelection((int) id + 1);
 						test.taskName = name;
 						/* Insert data into table */
-						Cursor cursor = database
+						Cursor cursor = m_database
 								.rawQuery(
 										"Select ifnull(max(CAST(topic_id as Int)), 0) from topic",
 										null);
@@ -296,7 +302,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 						String sql = "INSERT INTO topic VALUES ('"
 								+ String.valueOf(topicNameId) + "', '" + name
 								+ "'," + test.subjectId + ", 'TimeStamp');";
-						database.execSQL(sql);
+						m_database.execSQL(sql);
 						dialog.dismiss();
 						ivAddParameter.setEnabled(false);
 						save.setEnabled(false);
@@ -379,7 +385,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 						test.taskTopic = name;
 
 						/* Insert data into table */
-						Cursor cursor = database
+						Cursor cursor = m_database
 								.rawQuery(
 										"Select max(CAST(subtopic_id as Int)) from subtopic",
 										null);
@@ -397,7 +403,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 								+ String.valueOf(subtopicNameId) + "', '"
 								+ test.taskName + "', '" + name
 								+ "', 'TimeStamp');";
-						database.execSQL(sql);
+						m_database.execSQL(sql);
 						dialog.dismiss();
 						ivAddParameter.setEnabled(true);
 						save.setEnabled(false);
@@ -438,7 +444,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 	private void setupTaskTopicSpinner() {
 		spTaskTopic.setClickable(true);
 		taskTopic = new ArrayList<String>();
-		Cursor cursor = database.rawQuery(
+		Cursor cursor = m_database.rawQuery(
 				"Select subtopic_name from subtopic where topic_name = '"
 						+ test.taskName + "'", null);
 		cursor.moveToFirst();
@@ -524,7 +530,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 									FaTask.this, list);
 							paramListView.setAdapter(adapterModel);
 							/* Insert data into table */
-							Cursor cursor = database
+							Cursor cursor = m_database
 									.rawQuery(
 											"Select max(CAST(parameter_id as Int)) from parameter",
 											null);
@@ -542,7 +548,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 									+ String.valueOf(parameterNameId) + "', '"
 									+ test.taskName + "', '" + name
 									+ "', 'TimeStamp');";
-							database.execSQL(sql);
+							m_database.execSQL(sql);
 							innerDialog.dismiss();
 						}
 					});
@@ -624,7 +630,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 			/* Get the maximum test id from test table */
 
-			Cursor cursor = database.rawQuery(
+			Cursor cursor = m_database.rawQuery(
 					"Select ifnull(max(CAST(test_id as Int)), 0) from test",
 					null);
 			int testId = 0;
@@ -636,7 +642,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 				testId += 1;
 				cursor.moveToNext();
 			}
-			cursor = database.rawQuery(
+			cursor = m_database.rawQuery(
 					"Select ifnull(max(task_number),0) from test where class_id = "
 							+ test.classId + " and subject_id = "
 							+ test.subjectId + " and teacher_term = '"
@@ -672,9 +678,9 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 					+ comment + "', " + totalMarks + ", " + groupTask + ", "
 					+ 0 + ", '" + username + "', " + "'TimeStamp');";
 
-			database.execSQL(sql);
+			m_database.execSQL(sql);
 
-			cursor = database.rawQuery(
+			cursor = m_database.rawQuery(
 					"Select ifnull(max(CAST(ques_id as Int)), 0) from ques",
 					null);
 			int quesId = 0;
@@ -704,7 +710,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 						+ "',null, null, null, null,null, null,0,0, null, '"
 						+ username + "', " + "'TimeStamp');";
 
-				database.execSQL(sql);
+				m_database.execSQL(sql);
 				/* Increement question ID by 1 */
 				quesId += 1;
 				quesNum += 1;
@@ -720,7 +726,7 @@ public class FaTask extends Activity implements OnItemSelectedListener,
 
 	public List<Model> getModel() {
 		List<Model> list = new ArrayList<Model>();
-		Cursor cursor = database.rawQuery(
+		Cursor cursor = m_database.rawQuery(
 				"select parameter_name from parameter where task_name ='"
 						+ test.taskName + "'", null);
 

@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/faTaskListDrawerLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:layout_height="match_parent" >
 
-    <Button
-        android:id="@+id/btFACreateTask"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#d0d0d0"
-        android:text="@string/fa_create_new" />
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
 
-    <ListView
-        android:id="@+id/lvTaskList"
-        android:layout_width="match_parent"
-        android:layout_height="0dip"
-        android:layout_weight="7" >
-    </ListView>
+        <Button
+            android:id="@+id/btFACreateTask"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#d0d0d0"
+            android:text="@string/fa_create_new" />
 
-</LinearLayout>
+        <ListView
+            android:id="@+id/lvTaskList"
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_weight="7" >
+        </ListView>
+    </LinearLayout>
+
+    <include layout="@layout/settings" />
+
+</android.support.v4.widget.DrawerLayout>

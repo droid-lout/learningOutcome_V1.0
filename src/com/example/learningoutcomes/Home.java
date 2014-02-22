@@ -29,7 +29,7 @@ public class Home extends Activity implements OnClickListener {
 	private Settings m_settings;
 	private SQLiteDatabase m_database;
 	private LODatabaseHelper m_databaseHelper;
-	private DrawerLayout m_drawerLayout;
+	private DrawerLayout m_homeDrawerLayout;
 	private Button m_btFaTask;
 	private Button m_btSaTask, m_btCsaTask;
 
@@ -47,7 +47,7 @@ public class Home extends Activity implements OnClickListener {
 
 		// Function call to set the title of the Action Bar
 		setTitle(setName());
-		m_drawerLayout = (DrawerLayout) findViewById(R.id.homeDrawerLayout);
+		m_homeDrawerLayout = (DrawerLayout) findViewById(R.id.homeDrawerLayout);
 		m_btFaTask = (Button) findViewById(R.id.btFaTask);
 		m_btFaTask.setOnClickListener(this);
 		m_btSaTask = (Button) findViewById(R.id.btSaTask);
@@ -117,10 +117,10 @@ public class Home extends Activity implements OnClickListener {
 			startActivity(i);
 			break;
 		case R.id.action_settings:
-			if(!m_drawerLayout.isDrawerOpen(Gravity.END))
-				m_drawerLayout.openDrawer(Gravity.END);
+			if(!m_homeDrawerLayout.isDrawerOpen(Gravity.END))
+				m_homeDrawerLayout.openDrawer(Gravity.END);
 			else
-				m_drawerLayout.closeDrawer(Gravity.END);
+				m_homeDrawerLayout.closeDrawer(Gravity.END);
 			break;
 		default:
 			return super.onOptionsItemSelected(menu);
