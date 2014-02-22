@@ -17,22 +17,22 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.learningoutcomes.Formative.FaTask;
 import com.example.learningoutcomes.database.LODatabaseHelper;
+import com.example.learningoutcomes.database.LODatabaseUtility;
 
 public class Login extends Activity implements View.OnClickListener {
 
-	SQLiteDatabase database;
-	LODatabaseHelper databaseHelper;
+	private SQLiteDatabase m_database;
+	private LODatabaseHelper m_databaseHelper;
 
-	TextView register;
-	TextView forgotPassword;
-	Button btLogin;
-	Animation anim;
+	private TextView m_register;
+	private TextView m_forgotPassword;
+	private Button m_btLogin;
+	private Animation m_anim;
 
-	EditText etUsername, etPassword;
-	String username, password, role;
-	TextView displayMessage;
+	private EditText m_etUsername, m_etPassword;
+	private String m_username, m_password, m_role;
+	private TextView m_displayMessage;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,10 +41,10 @@ public class Login extends Activity implements View.OnClickListener {
 		getActionBar().hide();
 		SharedPreferences prefs = this.getSharedPreferences("global_settings",
 				Context.MODE_PRIVATE);
-		String username = prefs.getString("username", "");
+		m_username = prefs.getString("username", "");
 
-		Log.e("User", username);
-		if (username.contentEquals("")) {
+		Log.e("User", m_username);
+		if (m_username.contentEquals("")) {
 			// do Nothing and continue further the user hasn't logged in yet.
 		} else {
 
@@ -53,74 +53,69 @@ public class Login extends Activity implements View.OnClickListener {
 			startActivity(i);
 		}
 		setContentView(R.layout.login);
-		/** Initialise database variables */
-		databaseHelper = new LODatabaseHelper(this);
-		database = databaseHelper.getWritableDatabase();
-		register = (TextView) findViewById(R.id.register);
-		register.setOnClickListener(this);
-		forgotPassword = (TextView) findViewById(R.id.forgotPassword);
-		forgotPassword.setOnClickListener(this);
-		btLogin = (Button) findViewById(R.id.btLogin);
-		btLogin.setOnClickListener(this);
+		/** Initialise m_database variables */
+		m_databaseHelper = new LODatabaseHelper(getApplicationContext());
+		m_database = m_databaseHelper.getWritableDatabase();
+		LODatabaseUtility.getInstance().setDatabase(m_database);
+		m_register = (TextView) findViewById(R.id.register);
+		m_register.setOnClickListener(this);
+		m_forgotPassword = (TextView) findViewById(R.id.forgotPassword);
+		m_forgotPassword.setOnClickListener(this);
+		m_btLogin = (Button) findViewById(R.id.btLogin);
+		m_btLogin.setOnClickListener(this);
 
-		displayMessage = (TextView) findViewById(R.id.tvDisplayMessage);
-		etUsername = (EditText) findViewById(R.id.etUserName);
-		etPassword = (EditText) findViewById(R.id.etPassword);
+		m_displayMessage = (TextView) findViewById(R.id.tvDisplayMessage);
+		m_etUsername = (EditText) findViewById(R.id.etUserName);
+		m_etPassword = (EditText) findViewById(R.id.etPassword);
 		setAnimationValue();
 
 	}
 
 	private void setAnimationValue() {
-		anim = new AlphaAnimation(0.0f, 1.0f);
-		anim.setDuration(100); // You can manage the time of the blink with
-								// this parameter
-		anim.setStartOffset(20);
-		anim.setRepeatMode(Animation.REVERSE);
+		m_anim = new AlphaAnimation(0.0f, 1.0f);
+		m_anim.setDuration(100); // You can manage the time of the blink with
+		// this parameter
+		m_anim.setStartOffset(20);
+		m_anim.setRepeatMode(Animation.REVERSE);
 	}
 
 	@Override
 	public void onClick(View view) {
 		switch (view.getId()) {
 		case R.id.register:
-			register.startAnimation(anim);
-			Toast.makeText(this, "Register - Under Construction",
+			m_register.startAnimation(m_anim);
+			Toast.makeText(this, "m_register - Under Construction",
 					Toast.LENGTH_SHORT).show();
 			break;
 		case R.id.forgotPassword:
-			forgotPassword.startAnimation(anim);
+			m_forgotPassword.startAnimation(m_anim);
 			Toast.makeText(this, "Forgot Password - Under Construction",
 					Toast.LENGTH_SHORT).show();
 			break;
 		case R.id.btLogin:
 			/* check the username and password */
-			if (etUsername.getText().length() == 0) {
-				displayMessage.setText("Enter User Name");
-				if (etPassword.getText().length() == 0) {
-					displayMessage.setText("Enter User Name and Password");
+			if (m_etUsername.getText().length() == 0) {
+				m_displayMessage.setText("Enter User Name");
+				if (m_etPassword.getText().length() == 0) {
+					m_displayMessage.setText("Enter User Name and Password");
 				}
 				return;
 			}
-			if (etPassword.getText().length() == 0) {
-				displayMessage.setText("Enter User Password");
+			if (m_etPassword.getText().length() == 0) {
+				m_displayMessage.setText("Enter User Password");
 				return;
 			}
-			username = etUsername.getText().toString();
-			password = etPassword.getText().toString();
-			Cursor cursor = database.rawQuery(
-					"select * from login where username = '" + username
-							+ "' and password = '" + password + "'", null);
-			/* Create some shared preferences here for global settings */
-			/* Move to an intermediate page here */
-
-			cursor.moveToFirst();
+			m_username = m_etUsername.getText().toString();
+			m_password = m_etPassword.getText().toString();
+			Cursor cursor = LODatabaseUtility.getInstance().cursorFromQuery(
+					"select * from login where username = '" + m_username
+					+ "' and password = '" + m_password + "'");
 			if (cursor.isAfterLast()) {
-				displayMessage.setText("Invalid username password !");
+				m_displayMessage.setText("Invalid username password !");
 				return;
 			} else {
-				username = cursor.getString(cursor
-						.getColumnIndexOrThrow("username"));
-
-				role = cursor.getString(cursor.getColumnIndexOrThrow("role"));
+				m_username = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "username");
+				m_role = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "role");
 			}
 			cursor.close();
 
@@ -128,21 +123,21 @@ public class Login extends Activity implements View.OnClickListener {
 			SharedPreferences shPref = getSharedPreferences("global_settings",
 					MODE_PRIVATE);
 			Editor et = shPref.edit();
-			et.putString("username", username);
-			et.putString("role", role);
-			String temp = shPref.getString(username + "term", "");
+			et.putString("username", m_username);
+			et.putString("role", m_role);
+			String temp = shPref.getString(m_username + "term", "");
 			if (temp.contentEquals(""))
-				et.putString(username + "term", "Term 2");
-			temp = shPref.getString(username + "subject", "");
+				et.putString(m_username + "term", "Term 2");
+			temp = shPref.getString(m_username + "subject", "");
 			if (temp.contentEquals(""))
-				et.putString(username + "subject", "6");
-			temp = shPref.getString(username + "class", "");
+				et.putString(m_username + "subject", "6");
+			temp = shPref.getString(m_username + "class", "");
 			if (temp.contentEquals(""))
-				et.putString(username + "class", "2");
-			temp = shPref.getString(username + "testname", "");
+				et.putString(m_username + "class", "2");
+			temp = shPref.getString(m_username + "testname", "");
 			if (temp.contentEquals(""))
-				et.putString(username + "testname", "UnitTest 3");
-			et.putString(username + "school_id", "1");
+				et.putString(m_username + "testname", "UnitTest 3");
+			et.putString(m_username + "school_id", "1");
 			et.commit();
 			Intent i = new Intent(this, Home.class);
 			finish();
@@ -153,13 +148,13 @@ public class Login extends Activity implements View.OnClickListener {
 
 	@Override
 	protected void onPause() {
-		databaseHelper.close();
+		m_databaseHelper.close();
 		super.onPause();
 	}
 
 	@Override
 	protected void onResume() {
-		database = databaseHelper.getWritableDatabase();
+		m_database = m_databaseHelper.getWritableDatabase();
 		super.onResume();
 	}
 }

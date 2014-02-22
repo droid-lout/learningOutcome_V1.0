@@ -1,8 +1,5 @@
 package com.example.learningoutcomes;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -12,7 +9,8 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.widget.DrawerLayout;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,36 +21,40 @@ import android.widget.Toast;
 
 import com.example.learningoutcomes.Formative.FaTask;
 import com.example.learningoutcomes.Formative.FaTaskList;
-import com.example.learningoutcomes.Formative.Model;
 import com.example.learningoutcomes.database.LODatabaseHelper;
+import com.example.learningoutcomes.database.LODatabaseUtility;
 
 @SuppressLint("NewApi")
 public class Home extends Activity implements OnClickListener {
-	Settings m_settings;
-	SQLiteDatabase database;
-	LODatabaseHelper databaseHelper;
-
-	Button btFaTask;;
-	Button btSaTask, btCsaTask;
+	private Settings m_settings;
+	private SQLiteDatabase m_database;
+	private LODatabaseHelper m_databaseHelper;
+	private DrawerLayout m_drawerLayout;
+	private Button m_btFaTask;
+	private Button m_btSaTask, m_btCsaTask;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
+		m_databaseHelper = new LODatabaseHelper(getApplicationContext());
+		m_database = m_databaseHelper.getWritableDatabase();
+		LODatabaseUtility.getInstance().setDatabase(m_database);
 		m_settings = new Settings(getApplicationContext(), 
 				(Spinner) findViewById(R.id.spClass), (Spinner) findViewById(R.id.spTestName),
 				(Spinner) findViewById(R.id.spTerm), (Spinner) findViewById(R.id.spSubject));
-		databaseHelper = new LODatabaseHelper(this);
-		database = databaseHelper.getWritableDatabase();
-		
+		m_settings.init();
+
 		// Function call to set the title of the Action Bar
 		setTitle(setName());
-		btFaTask = (Button) findViewById(R.id.btFaTask);
-		btFaTask.setOnClickListener(this);
-		btSaTask = (Button) findViewById(R.id.btSaTask);
-		btSaTask.setOnClickListener(this);
-		btCsaTask = (Button) findViewById(R.id.btCsaTask);
-		btCsaTask.setOnClickListener(this);
+		m_drawerLayout = (DrawerLayout) findViewById(R.id.homeDrawerLayout);
+		m_btFaTask = (Button) findViewById(R.id.btFaTask);
+		m_btFaTask.setOnClickListener(this);
+		m_btSaTask = (Button) findViewById(R.id.btSaTask);
+		m_btSaTask.setOnClickListener(this);
+		m_btCsaTask = (Button) findViewById(R.id.btCsaTask);
+		m_btCsaTask.setOnClickListener(this);
+		
 	}
 
 	private CharSequence setName() {
@@ -60,12 +62,9 @@ public class Home extends Activity implements OnClickListener {
 		SharedPreferences prefs = this.getSharedPreferences("global_settings",
 				Context.MODE_PRIVATE);
 		String username = prefs.getString("username", "user");
-		Cursor cursor = database.rawQuery(
-				"select name from teacher where username = '" + username + "'",
-				null);
-		// System.out.println(cursor);
-		cursor.moveToFirst();
-		welcomeName = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+		Cursor cursor = LODatabaseUtility.getInstance().cursorFromQuery(
+				"select name from teacher where username = '" + username + "'");
+		welcomeName = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "name");
 		cursor.close();
 		welcomeName = "Hi! " + welcomeName;
 		return welcomeName;
@@ -84,7 +83,7 @@ public class Home extends Activity implements OnClickListener {
 			break;
 		case R.id.btSaTask:
 			Toast.makeText(this, "Under Construnction !", Toast.LENGTH_SHORT)
-					.show();
+			.show();
 			break;
 		}
 	}
@@ -105,7 +104,7 @@ public class Home extends Activity implements OnClickListener {
 		case R.id.action_add:
 			Intent intent = new Intent(getApplicationContext(), FaTask.class);
 			startActivity(intent);
-			return super.onOptionsItemSelected(menu);
+			break;
 		case R.id.action_logout:
 			/* Clearing username for now for log out */
 			SharedPreferences shPref = getSharedPreferences("global_settings",
@@ -116,14 +115,16 @@ public class Home extends Activity implements OnClickListener {
 			Intent i = new Intent(this, Login.class);
 			finish();
 			startActivity(i);
-
-			return super.onOptionsItemSelected(menu);
+			break;
 		case R.id.action_settings:
-/*			i = new Intent(this, Settings.class);
-			startActivity(i);*/
-			return super.onOptionsItemSelected(menu);
+			if(!m_drawerLayout.isDrawerOpen(Gravity.END))
+				m_drawerLayout.openDrawer(Gravity.END);
+			else
+				m_drawerLayout.closeDrawer(Gravity.END);
+			break;
 		default:
 			return super.onOptionsItemSelected(menu);
 		}
+		return super.onOptionsItemSelected(menu);
 	}
 }

@@ -1,7 +1,6 @@
 package com.example.learningoutcomes.database;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -47,9 +46,19 @@ public class LODatabaseUtility {
 	}
 	
 	/*
+	 * String from cursor
+	 */
+	public String dataStringfromCursor(Cursor cursor, String column) {
+		String value;
+		cursor.moveToFirst();
+		value = cursor.getString(cursor.getColumnIndexOrThrow(column));
+		return value;
+	}
+	
+	/*
 	 * set database
 	 */
-	public void setDatabse(SQLiteDatabase database) {
+	public void setDatabase(SQLiteDatabase database) {
 		m_database = database;
 	}
 }

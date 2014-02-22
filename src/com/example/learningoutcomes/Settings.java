@@ -59,11 +59,9 @@ public class Settings implements OnItemSelectedListener {
 		m_spinnerTestName = spinnnerTestName;
 		m_spinnerTerm = spinnerTerm;
 		m_spinnerSubject = spinnerSubject;
-		init();
-
 	}
 
-	private void init() {
+	public void init() {
 
 		m_listClass = new HashMap<String, String>();
 		m_listSubject = new HashMap<String, String>();
@@ -72,10 +70,9 @@ public class Settings implements OnItemSelectedListener {
 
 		prefs = m_context.getSharedPreferences("global_settings",
 				Context.MODE_PRIVATE);
-		databaseHelper = new LODatabaseHelper(m_context);
-		database = databaseHelper.getWritableDatabase();
-		LODatabaseUtility.getInstance().setDatabse(database);
-
+//		databaseHelper = new LODatabaseHelper(m_context);
+//		database = databaseHelper.getWritableDatabase();
+//		LODatabaseUtility.getInstance().setDatabase(database);
 		setUpSpinners();
 		gallery = 0;
 	}
@@ -92,6 +89,8 @@ public class Settings implements OnItemSelectedListener {
 		m_listTerm = LODatabaseUtility.getInstance().dataListfromCursor(cursor, "teacher_term");
 		termSettings = prefs.getString(username + "term", "0");
 		adapterTerm = setSpinnerAdapter(m_spinnerTerm, adapterTerm, m_listTerm, termSettings, "Select Term", "Term");
+		m_spinnerTerm.setOnItemSelectedListener(this);
+		m_spinnerTerm.setSelection(m_listTerm.indexOf(termSettings) + 1);
 		
 		/* 
 		 * Get the value of subject teacher teaches for a particular term 
@@ -115,6 +114,7 @@ public class Settings implements OnItemSelectedListener {
 		subjectSettings = prefs.getString(username + "subject", "0");
 		ArrayList<String> subjectVal = new ArrayList<String>(m_listSubject.keySet());
 		adapterSubject = setSpinnerAdapter(m_spinnerSubject, adapterSubject, subjectVal, termSettings, "Select Subject", "Subject");
+		m_spinnerSubject.setOnItemSelectedListener(this);
 		
 		/* 
 		 * Get the value of class and section a teacher teaches for a particular term and a particular subject 
