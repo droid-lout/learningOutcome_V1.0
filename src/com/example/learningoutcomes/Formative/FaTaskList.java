@@ -37,6 +37,10 @@ public class FaTaskList extends Activity {
 	private DrawerLayout m_faTaskListDrawerLayout;
 	private ListView lvTaskList;
 	ArrayAdapter<TaskListRow> adapter;
+
+	SQLiteDatabase database;
+	LODatabaseHelper databaseHelper;
+
 	String username, teacher_term, testName;
 	int classId, subjectId, selectPosition;
 
@@ -102,16 +106,17 @@ public class FaTaskList extends Activity {
 		// ListView scrolling,
 		// we don't look for swipes.
 		lvTaskList.setOnScrollListener(touchListener.makeScrollListener());
-		lvTaskList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		lvTaskList
+				.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-			@Override
-			public void onItemClick(AdapterView<?> adapter, View view,
-					int position, long id) {
-				selectPosition = position;
-				touchListener.clickAnimation();
+					@Override
+					public void onItemClick(AdapterView<?> adapter, View view,
+							int position, long id) {
+						selectPosition = position;
+						touchListener.clickAnimation();
 
-			}
-		});
+					}
+				});
 		Button createButton = (Button) findViewById(R.id.btFACreateTask);
 		createButton.setOnClickListener(new View.OnClickListener() {
 
@@ -136,11 +141,11 @@ public class FaTaskList extends Activity {
 
 		Cursor cursor = m_database.rawQuery(
 				"select * from test where class_id = " + classId
-				+ " and subject_id = " + subjectId
-				+ " and teacher_term = '" + teacher_term
-				+ "' and testname = '" + testName
-				+ "' and test_type =  'Formative"
-				+ "' and username = '" + username + "'", null);
+						+ " and subject_id = " + subjectId
+						+ " and teacher_term = '" + teacher_term
+						+ "' and testname = '" + testName
+						+ "' and test_type =  'Formative"
+						+ "' and username = '" + username + "'", null);
 		cursor.moveToFirst();
 		/* Adding static date for now */
 		while (!cursor.isAfterLast()) {
@@ -218,7 +223,8 @@ public class FaTaskList extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			Intent intent = new Intent(getApplicationContext(), FaEditTask.class);
+			Intent intent = new Intent(getApplicationContext(),
+					FaEditTask.class);
 			intent.putExtra("test_id", "" + testId.get(selectPosition));
 			startActivity(intent);
 		}
@@ -242,4 +248,17 @@ public class FaTaskList extends Activity {
 			toast.show();
 		}
 	};
+
+	@Override
+	protected void onPause() {
+		databaseHelper.close();
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+		database = databaseHelper.getWritableDatabase();
+		super.onResume();
+	}
+
 }

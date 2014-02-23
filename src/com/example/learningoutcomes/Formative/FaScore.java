@@ -42,9 +42,12 @@ public class FaScore extends Activity implements OnItemSelectedListener,
 	LODatabaseHelper databaseHelper;
 
 	List<String> studentName;
+	List<String> groupName;
 
 	ArrayAdapter<String> adapterStudentName;
+	ArrayAdapter<String> adapterGroupName;
 	Spinner spStudent;
+	Spinner spGroup;
 
 	List<String> parameterName;
 	List<Integer> parameterMaxScore;
@@ -86,6 +89,21 @@ public class FaScore extends Activity implements OnItemSelectedListener,
 		testName = shPref.getString(username + "testname", "");
 
 		spStudent = (Spinner) findViewById(R.id.spStudentName);
+		spGroup = (Spinner) findViewById(R.id.spGroupName);
+
+		/*
+		 * The group spinner is not to be displayed in this as this is not a
+		 * group task
+		 */
+		groupName = new ArrayList<String>();
+		groupName.add("Dummy");
+		adapterGroupName = new ArrayAdapter<String>(this, -1, groupName);
+		spGroup.setAdapter(new NothingSelectedSpinnerAdapter(adapterGroupName,
+				-1,
+				// R.layout.contact_spinner_nothing_selected_dropdown, //
+				// Optional
+				this, "Not a Group Task", "Student"));
+		spGroup.setEnabled(false);
 
 		comments = (EditText) findViewById(R.id.etComments);
 		statusGroup = (RadioGroup) findViewById(R.id.rgStatus);
