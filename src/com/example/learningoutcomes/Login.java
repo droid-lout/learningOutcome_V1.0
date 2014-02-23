@@ -31,7 +31,7 @@ public class Login extends Activity implements View.OnClickListener {
 	private Animation m_anim;
 
 	private EditText m_etUsername, m_etPassword;
-	private String m_username, m_password, m_role;
+	private String m_username, m_password, m_role, m_schoolId;
 	private TextView m_displayMessage;
 
 	@Override
@@ -43,7 +43,6 @@ public class Login extends Activity implements View.OnClickListener {
 				Context.MODE_PRIVATE);
 		m_username = prefs.getString("username", "");
 
-		Log.e("User", m_username);
 		if (m_username.contentEquals("")) {
 			// do Nothing and continue further the user hasn't logged in yet.
 		} else {
@@ -116,6 +115,8 @@ public class Login extends Activity implements View.OnClickListener {
 			} else {
 				m_username = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "username");
 				m_role = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "role");
+				m_schoolId = LODatabaseUtility.getInstance().dataStringfromCursor(cursor, "school_id");
+				Log.e("Login", m_schoolId);
 			}
 			cursor.close();
 
@@ -127,17 +128,17 @@ public class Login extends Activity implements View.OnClickListener {
 			et.putString("role", m_role);
 			String temp = shPref.getString(m_username + "term", "");
 			if (temp.contentEquals(""))
-				et.putString(m_username + "term", "Term 2");
+				et.putString(m_username + "term", "Term 1");
 			temp = shPref.getString(m_username + "subject", "");
 			if (temp.contentEquals(""))
-				et.putString(m_username + "subject", "6");
+				et.putString(m_username + "subject", "1");
 			temp = shPref.getString(m_username + "class", "");
 			if (temp.contentEquals(""))
-				et.putString(m_username + "class", "2");
+				et.putString(m_username + "class", "1");
 			temp = shPref.getString(m_username + "testname", "");
 			if (temp.contentEquals(""))
 				et.putString(m_username + "testname", "UnitTest 3");
-			et.putString(m_username + "school_id", "1");
+			et.putString(m_username + "school_id", m_schoolId);
 			et.commit();
 			Intent i = new Intent(this, Home.class);
 			finish();
@@ -155,6 +156,7 @@ public class Login extends Activity implements View.OnClickListener {
 	@Override
 	protected void onResume() {
 		m_database = m_databaseHelper.getWritableDatabase();
+		LODatabaseUtility.getInstance().setDatabase(m_database);
 		super.onResume();
 	}
 }

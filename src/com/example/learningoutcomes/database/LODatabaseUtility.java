@@ -61,4 +61,12 @@ public class LODatabaseUtility {
 	public void setDatabase(SQLiteDatabase database) {
 		m_database = database;
 	}
+	
+	/*
+	 * get Database
+	 */
+	
+	public SQLiteDatabase getDatabase() {
+		return m_database;
+	}
 }

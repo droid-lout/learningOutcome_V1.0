@@ -325,7 +325,7 @@ public class LOTableClass {
 				+ " VALUES (1, 'harman', 'sohanpal','admin' , 'harman@gmail.com', '1' , 'TimeStamp');";
 		String InsertLoginB = "INSERT INTO "
 				+ TABLE_LOGIN
-				+ " VALUES (4, 'nitish', 'bazinga','Root' , 'nitishmehrotra@gmail.com', '1' , 'TimeStamp');";
+				+ " VALUES (4, 'nitish', 'bazinga','Root' , 'nitishmehrotra@gmail.com', '2' , 'TimeStamp');";
 
 		database.execSQL(InsertLoginA);
 		database.execSQL(InsertLoginB);
@@ -371,6 +371,16 @@ public class LOTableClass {
 		String InsertTeacherJ = "INSERT INTO "
 				+ TABLE_TEACHER
 				+ " VALUES (10, 'harman', 'Harman Sohanpal', 10, 6, 1, 'Term 1', 'TimeStamp' )";
+		String InsertTeacherK = "INSERT INTO "
+				+ TABLE_TEACHER
+				+ " VALUES (11, 'nitish', 'Nitish Mehrotra', 1, 1, 2, 'Term 2', 'TimeStamp' )";
+		String InsertTeacherL = "INSERT INTO "
+				+ TABLE_TEACHER
+				+ " VALUES (12, 'nitish', 'Nitish Mehrotra', 5, 2, 2, 'Term 2', 'TimeStamp' )";
+		String InsertTeacherM = "INSERT INTO "
+				+ TABLE_TEACHER
+				+ " VALUES (13, 'nitish', 'Nitish Mehrotra', 8, 6, 2, 'Term 1', 'TimeStamp' )";
+		
 
 		database.execSQL(InsertTeacherA);
 		database.execSQL(InsertTeacherB);
@@ -382,6 +392,9 @@ public class LOTableClass {
 		database.execSQL(InsertTeacherH);
 		database.execSQL(InsertTeacherI);
 		database.execSQL(InsertTeacherJ);
+		database.execSQL(InsertTeacherK);
+		database.execSQL(InsertTeacherL);
+		database.execSQL(InsertTeacherM);
 
 	}
 
@@ -541,15 +554,15 @@ public class LOTableClass {
 	private static void dummyTestName(SQLiteDatabase database) {
 
 		String Insert1 = "INSERT INTO " + TABLE_TESTNAME
-				+ " VALUES ('1', 'UnitTest 1', '1', 'TimeStamp');";
+				+ " VALUES ('1', 'UnitTest 1', 1, 'TimeStamp');";
 		String Insert2 = "INSERT INTO " + TABLE_TESTNAME
-				+ " VALUES ('2', 'UnitTest 2', '1', 'TimeStamp');";
+				+ " VALUES ('2', 'UnitTest 2', 1, 'TimeStamp');";
 		String Insert3 = "INSERT INTO " + TABLE_TESTNAME
-				+ " VALUES ('3', 'FA 1', '1', 'TimeStamp');";
+				+ " VALUES ('3', 'FA 1', 1, 'TimeStamp');";
 		String Insert4 = "INSERT INTO " + TABLE_TESTNAME
-				+ " VALUES ('4', 'FA2 1', '1', 'TimeStamp');";
+				+ " VALUES ('4', 'FA2 1', 2, 'TimeStamp');";
 		String Insert5 = "INSERT INTO " + TABLE_TESTNAME
-				+ " VALUES ('5', 'UnitTest 3', '1', 'TimeStamp');";
+				+ " VALUES ('5', 'UnitTest 3', 2, 'TimeStamp');";
 
 		database.execSQL(Insert1);
 		database.execSQL(Insert2);
