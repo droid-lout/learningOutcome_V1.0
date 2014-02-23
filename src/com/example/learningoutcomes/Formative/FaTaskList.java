@@ -30,18 +30,19 @@ import com.example.learningoutcomes.swipeListView.SwipeDismissListViewTouchListe
 
 @SuppressLint("NewApi")
 public class FaTaskList extends Activity {
-	
+
 	private Settings m_settings;
 	private LODatabaseHelper m_databaseHelper;
 	private SQLiteDatabase m_database;
 	private DrawerLayout m_faTaskListDrawerLayout;
 	private ListView lvTaskList;
-	ArrayAdapter<TaskListRow> adapter;
-	String username, teacher_term, testName;
-	int classId, subjectId, selectPosition;
-
+	private ArrayAdapter<TaskListRow> m_adapter;
+	private String username, teacher_term, testName;
+	private int classId, subjectId, selectPosition;
+	private boolean m_drawerOpen = false;
 	/* Use testId.get(i) */
 	List<String> testId;
+	List<Integer> groupList;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,9 +76,10 @@ public class FaTaskList extends Activity {
 		//Setting Swipe in action
 		lvTaskList = (ListView) findViewById(R.id.lvTaskList);
 		testId = new ArrayList<String>();
-		adapter = new TaskListRowDataAdapter(this, getTaskList(),
+		groupList = new ArrayList<Integer>();
+		m_adapter = new TaskListRowDataAdapter(this, getTaskList(),
 				editTaskListener, scoreTaskListener, viewTaskListener);
-		lvTaskList.setAdapter(adapter);
+		lvTaskList.setAdapter(m_adapter);
 
 		final SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(
 				lvTaskList,
@@ -91,9 +93,9 @@ public class FaTaskList extends Activity {
 					public void onDismiss(ListView listView,
 							int[] reverseSortedPositions) {
 						for (int position : reverseSortedPositions) {
-							adapter.remove(adapter.getItem(position));
+							m_adapter.remove(m_adapter.getItem(position));
 						}
-						adapter.notifyDataSetChanged();
+						m_adapter.notifyDataSetChanged();
 					}
 				});
 
@@ -158,6 +160,7 @@ public class FaTaskList extends Activity {
 			if (groupTask == 1)
 				group = true;
 			testId.add(cursor.getString(cursor.getColumnIndexOrThrow("test_id")));
+			groupList.add(groupTask);
 			list.add(createTaskListRow(taskNum, taskname, "20/01/33",
 					taskTopic, group, maxMarks));
 			cursor.moveToNext();
@@ -176,6 +179,16 @@ public class FaTaskList extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.action_bar, menu);
+		MenuItem add = menu.findItem(R.id.action_add);
+		MenuItem search = menu.findItem(R.id.action_search);
+		if(m_drawerOpen) {
+			add.setVisible(false);
+			search.setVisible(false);
+		}
+		else {
+			add.setVisible(true);
+			search.setVisible(true);
+		}
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -186,7 +199,6 @@ public class FaTaskList extends Activity {
 			finish();
 			break;
 		case R.id.action_add:
-			createTask();
 			Intent intent = new Intent(getApplicationContext(), FaTask.class);
 			finish();
 			startActivity(intent);
@@ -197,21 +209,21 @@ public class FaTaskList extends Activity {
 			toast.show();
 			break;
 		case R.id.action_settings:
-			if(!m_faTaskListDrawerLayout.isDrawerOpen(Gravity.END))
+			if(!m_faTaskListDrawerLayout.isDrawerOpen(Gravity.END)) {
 				m_faTaskListDrawerLayout.openDrawer(Gravity.END);
-			else
+				m_drawerOpen = true;
+				invalidateOptionsMenu();
+			}
+			else {
 				m_faTaskListDrawerLayout.closeDrawer(Gravity.END);
+				m_drawerOpen = false;
+				invalidateOptionsMenu();
+			}
 			break;
 		default:
 			return super.onOptionsItemSelected(menu);
 		}
 		return super.onOptionsItemSelected(menu);
-	}
-
-	private void createTask() {
-		// if(getIntent().getExtras().getString("type") == "Formative")
-		// Log.d("Activity Type", "Formative");
-		//
 	}
 
 	View.OnClickListener editTaskListener = new View.OnClickListener() {
@@ -228,7 +240,13 @@ public class FaTaskList extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			Intent intent = new Intent(getApplicationContext(), FaScore.class);
+			Intent intent;
+			if(groupList.get(selectPosition) == 1) {
+				intent = new Intent(getApplicationContext(), FaScore.class);
+			}
+			else {
+				intent = new Intent(getApplicationContext(), FaScore.class);
+			}
 			intent.putExtra("test_id", "" + testId.get(selectPosition));
 			startActivity(intent);
 		}
