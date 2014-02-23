@@ -244,7 +244,7 @@ public class FaTaskList extends Activity {
 		public void onClick(View v) {
 			Intent intent;
 			if(groupList.get(selectPosition) == 1) {
-				intent = new Intent(getApplicationContext(), FaScore.class);
+				intent = new Intent(getApplicationContext(), FaCreateGroup.class);
 			}
 			else {
 				intent = new Intent(getApplicationContext(), FaScore.class);
@@ -263,17 +263,17 @@ public class FaTaskList extends Activity {
 		}
 	};
 
-	@Override
-	protected void onPause() {
-		m_databaseHelper.close();
-		super.onPause();
-	}
-
-	@Override
-	protected void onResume() {
-		m_database = m_databaseHelper.getWritableDatabase();
-		LODatabaseUtility.getInstance().setDatabase(m_database);
-		super.onResume();
-	}
+//	@Override
+//	protected void onPause() {
+//		m_databaseHelper.close();
+//		super.onPause();
+//	}
+//
+//	@Override
+//	protected void onResume() {
+//		m_database = m_databaseHelper.getWritableDatabase();
+//		LODatabaseUtility.getInstance().setDatabase(m_database);
+//		super.onResume();
+//	}
 
 }
